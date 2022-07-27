@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
 
+import { initialColor, defaultHoverColor, minValues, maxValues } from './constants';
 import './style.css';
 
 // GUI Controls
@@ -13,12 +14,14 @@ const world = {
     height: 400,
     widthSegments: 50,
     heightSegments: 50,
+    r: defaultHoverColor.r,
+    g: defaultHoverColor.g,
+    b: defaultHoverColor.b,
   }
 };
-gui.add(world.plane, 'width', 1, 500).onChange(generatePlane);
-gui.add(world.plane, 'height', 1, 500).onChange(generatePlane);
-gui.add(world.plane, 'widthSegments', 1, 100).onChange(generatePlane);
-gui.add(world.plane, 'heightSegments', 1, 100).onChange(generatePlane);
+Object.keys(world.plane).forEach((key) => {
+  gui.add(world.plane, `${key}`, minValues[key], maxValues[key]).onChange(generatePlane);
+})
 
 const raycaster = new THREE.Raycaster();
 const scene = new THREE.Scene();
@@ -69,7 +72,7 @@ function generatePlane() {
   // color attribute position
   const colors = [];
   for (let i = 0; i < plane.geometry.attributes.position.count; i++) {
-    colors.push(0, 0.19, 0.4);
+    colors.push(initialColor.r, initialColor.g, initialColor.b);
   }
 
   plane.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
@@ -108,17 +111,11 @@ function animate() {
   if (intersects.length > 0) {
     const { color } = intersects[0].object.geometry.attributes;
 
-    const initialColor = {
-      r: 0,
-      g: 0.19,
-      b: 0.4,
-    };
-
     const hoverColor = {
-      r: 0.1,
-      g: 0.5,
-      b: 1,
-    }
+      r: world.plane.r,
+      g: world.plane.g,
+      b: world.plane.b,
+    };
 
     gsap.to(hoverColor, {
       r: initialColor.r,
