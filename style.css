@@ -33,7 +33,7 @@ p {
   line-height: 2.5rem;
 }
 
-a {
+button {
   display: inline-block;
   margin-top: 2rem;
   padding: 0.5rem 1rem;
@@ -43,9 +43,15 @@ a {
   border: 1px solid #ffffff;
   border-radius: 0.5rem;
   text-decoration: none;
+  background: none;
+  cursor: pointer;
 }
 
-a:hover {
+button:hover {
   background: #ffffff;
   color: #2d2c2c;
+}
+
+.invisible {
+  display: none;
 }
