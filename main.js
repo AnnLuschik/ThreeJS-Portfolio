@@ -23,25 +23,65 @@ Object.keys(world.plane).forEach((key) => {
   gui.add(world.plane, `${key}`, minValues[key], maxValues[key]).onChange(generatePlane);
 })
 
-const raycaster = new THREE.Raycaster();
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+let renderer, scene, camera, raycaster, orbit;
+let frame = 0;
+const tl = gsap.timeline();
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(devicePixelRatio);
+const mouse = {
+  x: undefined,
+  y: undefined,
+};
 
-new OrbitControls(camera, renderer.domElement);
-camera.position.z = 100;
-scene.add(camera);
+let plane;
 
-document.body.appendChild(renderer.domElement);
+init();
 
-const geometry = new THREE.PlaneGeometry(world.plane.width, world.plane.height, world.plane.widthSegments, world.plane.heightSegments);
-const material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, flatShading: THREE.FlatShading, vertexColors: true });
-const plane = new THREE.Mesh(geometry, material);
-scene.add(plane);
-generatePlane();
+function init() {
+  raycaster = new THREE.Raycaster();
+  scene = new THREE.Scene();
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 100;
+  scene.add(camera);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  orbit = new OrbitControls(camera, renderer.domElement);
+
+  document.body.appendChild(renderer.domElement);
+
+  // Plane object
+  const geometry = new THREE.PlaneGeometry(world.plane.width, world.plane.height, world.plane.widthSegments, world.plane.heightSegments);
+  const material = new THREE.MeshPhongMaterial({ side: THREE.DoubleSide, flatShading: THREE.FlatShading, vertexColors: true });
+  plane = new THREE.Mesh(geometry, material);
+  scene.add(plane);
+  generatePlane();
+
+  // Lights
+  const light = new THREE.DirectionalLight(0xFFFFFF, 1);
+  light.position.set(0, 1, 1);
+  scene.add(light);
+
+  const backLight = new THREE.DirectionalLight(0xFFFFFF, 1);
+  backLight.position.set(0, 0, -1);
+  scene.add(backLight);
+
+  document.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  window.addEventListener('resize', onWindowResize);
+
+  const button = document.querySelector('button');
+  button.addEventListener('click', flyCamera);
+
+  animate();
+}
 
 function generatePlane() {
   const { width, height, widthSegments, heightSegments } = world.plane;
@@ -78,22 +118,6 @@ function generatePlane() {
   plane.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
 }
 
-// Lights
-const light = new THREE.DirectionalLight(0xFFFFFF, 1);
-light.position.set(0, 1, 1);
-scene.add(light);
-
-const backLight = new THREE.DirectionalLight(0xFFFFFF, 1);
-backLight.position.set(0, 0, -1);
-scene.add(backLight);
-
-const mouse = {
-  x: undefined,
-  y: undefined,
-};
-
-// Animation
-let frame = 0;
 function animate() {
   renderer.render(scene, camera);
   raycaster.setFromCamera(mouse, camera);
@@ -145,10 +169,31 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-animate();
+function flyCamera() {
+  const text = document.querySelector('#app');
+  text.className = 'invisible';
 
-document.addEventListener('mousemove', (event) => {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-});
+  tl
+    .to(camera.position, {
+      duration: 1,
+      z: 10,
+      y: -world.plane.height / 2,
+      onUpdate: function () {
+        camera.lookAt(scene.position);
+      }
+    })
+    .to(camera.position, {
+      duration: 2,
+      y: world.plane.height,
+      ease: "expo.in",
+      onUpdate: function () {
+        window.location.href = "https://github.com/AnnLuschik";
+      }
+    })
+}
 
+function onWindowResize() {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+}
