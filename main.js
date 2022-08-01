@@ -1,6 +1,5 @@
 import gsap from 'gsap';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
 
 import { initialColor, defaultHoverColor, minValues, maxValues } from './constants';
@@ -27,10 +26,7 @@ let renderer, scene, camera, raycaster, orbit;
 let frame = 0;
 const tl = gsap.timeline();
 
-const mouse = {
-  x: undefined,
-  y: undefined,
-};
+const mouse = new THREE.Vector2();
 
 let plane;
 
@@ -49,8 +45,6 @@ function init() {
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
-
-  orbit = new OrbitControls(camera, renderer.domElement);
 
   document.body.appendChild(renderer.domElement);
 
@@ -183,7 +177,7 @@ function flyCamera() {
       }
     })
     .to(camera.position, {
-      duration: 2,
+      duration: 0.5,
       y: world.plane.height,
       ease: "expo.in",
       onUpdate: function () {
